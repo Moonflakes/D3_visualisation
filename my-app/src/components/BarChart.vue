@@ -22,6 +22,12 @@ const margin = { top: 20, right: 30, bottom: 30, left: 40 },
 export default {
   name: "non-vue-line-chart",
   template: "<div></div>",
+  data() {
+    return {
+      loadData: {}
+    }
+  },
+
   mounted() {
     const barChart = d3.select(this.$el).append("svg");
 
@@ -44,7 +50,7 @@ export default {
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    d3.json("data.json").then(data => {
+    d3.json("/data.json").then(data => {
       console.log(data)
       x.domain(
         data.map(function(d) {
@@ -98,7 +104,15 @@ export default {
           return height - y(d.value);
         })
         .attr("width", width / data.length - 5);
-    });
+    })
+    .catch(err => console.log(err));
+  },
+
+  methods: {
+    async fetchData() {
+      let data = await d3.json("/data.json")
+      this.loadData = data
+    }
   }
 };
 </script>

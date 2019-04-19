@@ -28,7 +28,7 @@
     </v-toolbar>
 
     <v-content>
-      <router-view v-show="!globalLoader">
+      <router-view>
         <!-- Route content goes here. -->
       </router-view>
     </v-content>
