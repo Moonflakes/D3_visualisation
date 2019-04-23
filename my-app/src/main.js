@@ -8,6 +8,7 @@ import Vuetify from "vuetify";
 import "vuetify/dist/vuetify.min.css";
 
 import BarChart from "./components/BarChart.vue";
+import LineChart from "./components/LineChart.vue";
 
 Vue.use(VueRouter);
 Vue.use(Vuetify, {
@@ -22,7 +23,8 @@ Vue.use(Vuetify, {
 const router = new VueRouter({
     mode: "history",
     routes: [
-        { path: "/barChart", component: BarChart }
+        { path: "/barChart", component: BarChart },
+        { path: "/lineChart", component: LineChart }
     ]
 });
 
