@@ -20,8 +20,6 @@ const yAxis = d3.axisLeft(y);
 export default {
   name: "non-vue-line-chart",
   template: "<div></div>",
-  // data() {
-  // },
 
   mounted() {
     const barChart = d3.select(this.$el).append("svg");
@@ -49,19 +47,23 @@ export default {
         barChart
           .append("g")
           .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
+          .attr("transform", "translate(" + margin.left +"," + height + ")")
           .call(xAxis);
 
         barChart
           .append("g")
           .attr("class", "y axis")
-          .call(yAxis);
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(yAxis.tickFormat(function(d) {
+        var s = d;
+        return  s + '%';
+      }))
 
         barChart
           .append("text") // add label
           .attr("transform", "rotate(-90)")
-          .attr("y", 6)
-          .attr("dy", ".71em")
+          .attr("y", 60)
+          // .attr("dy", ".em")
           .style("text-anchor", "end")
           .text("Frequency");
 
@@ -71,8 +73,9 @@ export default {
           .enter()
           .append("rect")
           .attr("class", "bar")
+          .attr("fill", "steelblue")
           .attr("x", function(d) {
-            return x(d.name);
+            return x(d.name) + margin.left;
           })
           .attr("y", function(d) {
             return y(d.value);
@@ -88,12 +91,12 @@ export default {
 </script>
 
 <style>
-svg g div {
+/* svg g div {
   font: 10px sans-serif;
   background-color: steelblue;
   text-align: right;
   padding: 3px;
   margin: 1px;
   color: white;
-}
+} */
 </style>
