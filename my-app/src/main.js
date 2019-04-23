@@ -9,6 +9,7 @@ import "vuetify/dist/vuetify.min.css";
 
 import BarChart from "./components/BarChart.vue";
 import LineChart from "./components/LineChart.vue";
+import DonutChart from "./components/DonutChart.vue";
 
 Vue.use(VueRouter);
 Vue.use(Vuetify, {
@@ -24,7 +25,8 @@ const router = new VueRouter({
     mode: "history",
     routes: [
         { path: "/barChart", component: BarChart },
-        { path: "/lineChart", component: LineChart }
+        { path: "/lineChart", component: LineChart },
+        { path: "/donutChart", component: DonutChart }
     ]
 });
 

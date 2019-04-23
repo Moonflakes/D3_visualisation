@@ -46,6 +46,11 @@ export default {
         link: "/lineChart",
         icon: "show_chart",
         title: "Line Chart"
+      },
+      {
+        link: "/donutChart",
+        icon: "donut_large",
+        title: "Donut Chart"
       }]
     };
   }
