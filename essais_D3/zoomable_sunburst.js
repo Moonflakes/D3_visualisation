@@ -69,6 +69,8 @@ d3.json('flare.json').then((root) => {
 
     const newSlice = slice.enter()
         .append('g').attr('class', 'slice')
+        .attr("fill-opacity", 0.6)
+        .attr("text-anchor", "middle")
         .on('click', d => {
             d3.event.stopPropagation();
             focusOn(d);
