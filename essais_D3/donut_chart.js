@@ -37,7 +37,7 @@ d3.json("donut_data.json").then((data) => {
         .style("font", "10px sans-serif")
     // .style("box-sizing", "border-box")
 
-    chart.append("g")
+   const g = chart.append("g")
         .attr("fill-opacity", 0.6) // for color intensity
         .attr('transform', 'translate(500, 500)')
         .selectAll("path")
@@ -51,14 +51,14 @@ d3.json("donut_data.json").then((data) => {
         })
         .attr("d", arc) // positionne l'arc
         .append("title") // <path> cannot contain <text> elements
-        .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${format(d.value)}`);
+        .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${format(d.value)}`); // je ne sais pas a quoi ca sert ???
 
-    chart.append("g") // create donut of texts above the other
+    const label = chart.append("g") // create donut of texts above the other
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr('transform', 'translate(500, 500)')
         .selectAll("text")
-        .data(root.descendants().filter(d => d.depth && (d.y0 + d.y1) / 2 * (d.x1 - d.x0) > 10))
+        .data(root.descendants().filter(d => d.depth && (d.y0 + d.y1) / 2 * (d.x1 - d.x0) > 10)) // on ne prend que les noms ou le radian est assez grand pour le voir
         .enter().append("text")
         .attr("transform", function (d) {
             const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
@@ -67,7 +67,6 @@ d3.json("donut_data.json").then((data) => {
         })
         .attr("dy", "0.35em")
         .text(d => d.data.name);
-
 
         // other way to add directly text in g but text is not black
     // chart.selectAll(".node")
@@ -84,9 +83,66 @@ d3.json("donut_data.json").then((data) => {
     //     .attr("dy", "0.35em")
     //     .text(d => d.data.name);
 
-    // document.body.appendChild(chart.node());
-    // const box = chart.node().getBBox();
-    // document.body.removeChild(chart.node());
-    // chart.node().setAttribute("viewBox", `${box.x} ${box.y} ${box.width} ${box.height}`);
+
+    const path  = chart.selectAll("path")
+    path.filter(d => d.children)
+        .style("cursor", "pointer")
+        .on("click", clicked);
+
+    const parent = g.append("circle")
+      .datum(root)
+      .attr("r", radius)
+      .attr("fill", "none")
+      .attr("pointer-events", "all")
+      .on("click", clicked);
+
+    function clicked(p) {
+        console.log(parent)
+        parent.datum(p.parent || root);
+    
+        root.each(d => d.target = {
+          x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+          x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+          y0: Math.max(0, d.y0 - p.depth),
+          y1: Math.max(0, d.y1 - p.depth)
+        });
+    
+        const t = g.transition().duration(750);
+    
+        // Transition the data on all arcs, even the ones that aren’t visible,
+        // so that if this transition is interrupted, entering arcs will start
+        // the next transition from the desired position.
+        path.transition(t)
+            .tween("data", d => {
+              const i = d3.interpolate(d.current, d.target);
+              return t => d.current = i(t);
+            })
+          .filter(function(d) {
+            return +this.getAttribute("fill-opacity") || arcVisible(d.target);
+          })
+            .attr("fill-opacity", d => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+            .attrTween("d", d => () => arc(d.current));
+    
+        label.filter(function(d) {
+            return +this.getAttribute("fill-opacity") || labelVisible(d.target);
+          }).transition(t)
+            .attr("fill-opacity", d => +labelVisible(d.target))
+            .attrTween("transform", d => () => labelTransform(d.current));
+      }
+
+      function arcVisible(d) {
+        return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
+      }
+    
+      function labelVisible(d) {
+        return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
+      }
+    
+      function labelTransform(d) {
+        const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+        const y = (d.y0 + d.y1) / 2 * radius;
+        return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+      }
+    
 
 })
