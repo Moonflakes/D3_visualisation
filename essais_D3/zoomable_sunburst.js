@@ -10,10 +10,9 @@ const x = d3.scaleLinear()
 
 const y = d3.scaleSqrt()
     .range([maxRadius * .1, maxRadius]);
-console.log("lala")
 
 const partition = d3.partition();
-console.log("huhu")
+
 const arc = d3.arc()
     .startAngle(d => x(d.x0))
     .endAngle(d => x(d.x1))
@@ -35,6 +34,7 @@ const middleArcLine = d => {
 
     const path = d3.path();
     path.arc(0, 0, r, angles[0], angles[1], invertDirection);
+    console.log(path.toString())
     return path.toString();
 };
 
@@ -55,9 +55,7 @@ const svg = d3.select('body').append('svg')
     .on('click', () => focusOn()); // Reset zoom on canvas click
 
 d3.json('flare.json').then((root) => {
-    // if (error) throw error;
     const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, root.children.length + 1));
-    console.log("here")
 
     root = d3.hierarchy(root);
     root.sum(d => d.size);
@@ -91,7 +89,7 @@ d3.json('flare.json').then((root) => {
         .attr('d', middleArcLine);
 
     const text = newSlice.append('text')
-        .attr('display', d => textFits(d) ? null : 'none');
+        .attr('display', d => textFits(d) ? null : 'none')
 
     // Add white contour
     text.append('textPath')
@@ -101,12 +99,12 @@ d3.json('flare.json').then((root) => {
         .style('fill', 'none')
         .style('stroke', '#fff')
         .style('stroke-width', 5)
-        .style('stroke-linejoin', 'round');
+        // .style('stroke-linejoin', 'round')
 
     text.append('textPath')
         .attr('startOffset', '50%')
         .attr('xlink:href', (_, i) => `#hiddenArc${i}`)
-        .text(d => d.data.name);
+        .text(d => d.data.name)
 });
 
 function focusOn(d = {
