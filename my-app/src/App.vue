@@ -51,7 +51,23 @@ export default {
         link: "/donutChart",
         icon: "donut_large",
         title: "Donut Chart"
-      }]
+      },
+      {
+        link: "/chartBars",
+        icon: "bar_chart",
+        title: " Chart Bar"
+      },
+      {
+        link: "/chartLines",
+        icon: "show_chart",
+        title: " Chart Line"
+      },
+      {
+        link: "/chartDonut",
+        icon: "donut_large",
+        title: " Chart Donut"
+      }
+      ]
     };
   }
 };
