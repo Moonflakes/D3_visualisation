@@ -116,7 +116,55 @@ export default {
       type: Number,
       default: 932
     },
-    displaySunburst: Object
+    displaySunburst: {
+      type: Object,
+      default: {
+        color: {
+          colorScale: Function,
+          opacity: 0.6,
+          childrenOpacity: {
+            present: false,
+            opacity: 0.6
+          }
+        },
+        nbRing: "all",
+        slices: {
+          zoomable: true,
+          text: {
+            present: true,
+            font: {
+              size: "10px",
+              family: "sans-serif"
+            },
+            rotation: "transform string"
+          },
+          joinSmallestSlices: true,
+          center: {
+            visibility: false
+          },
+          hover: true
+        },
+        sizes: {
+          margin: 30,
+          sunburstW: 500,
+          legendW: 300,
+          sequenceW: 500 + 300 + 30
+        },
+        legends: {
+          present: true,
+          position: "right",
+          clickable: true
+        },
+        sequence: {
+          present: true,
+          position: "top",
+          endLabel: {
+            present: true,
+            unit: "Million d'euros"
+          }
+        }
+      }
+    }
   },
   data: function() {
     let color = scaleOrdinal(
@@ -371,7 +419,10 @@ export default {
         if (l <= word.length + 1) index = i;
       });
       let newSpan1 = splitSpan.slice(0, index + 1).join(" ");
-      let newSpan2 = splitSpan.length > 1 ? splitSpan.slice(index + 1, splitSpan.length).join(" ") : null;
+      let newSpan2 =
+        splitSpan.length > 1
+          ? splitSpan.slice(index + 1, splitSpan.length).join(" ")
+          : null;
       newSpan.push(newSpan1);
 
       if (newSpan2 && newSpan2.length > word.length)
@@ -469,9 +520,13 @@ export default {
       let allLength = allNames.map(elem => elem.length);
       let maxL = Math.max(...allLength);
 
-      let ySpanScale = scaleLinear()
+      let ySpanScale = scaleLinear();
       ySpanScale.range([(maxL + 1) * 5, 15]).domain([1, maxL - 1]);
-      return sequence.length === maxL ? (maxL === 1 ? 15 : 13) : ySpanScale(sequence.length)
+      return sequence.length === maxL
+        ? maxL === 1
+          ? 15
+          : 13
+        : ySpanScale(sequence.length);
     },
     clicked(index) {
       this.targetIndex = index;

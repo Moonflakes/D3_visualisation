@@ -85,7 +85,10 @@ export default {
     },
     legends: {
       type: Object,
-      default: {}
+      default: {
+        display: null,
+        names: []
+      }
     }
   },
   data: function() {
