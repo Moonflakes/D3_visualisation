@@ -1,6 +1,24 @@
 <template>
   <v-app>
-    <v-toolbar app>
+    <v-card height="56px">
+      <v-bottom-nav
+        :active.sync="bottomNav"
+        :color="color"
+        :value="true"
+        absolute
+        dark
+        shift
+        
+      >
+  <router-link :to="item.link" v-for="item in menu">
+        <v-btn dark>
+          <span>{{item.title}}</span>
+          <v-icon>{{item.icon}}</v-icon>
+        </v-btn>
+        </router-link>
+      </v-bottom-nav>
+    </v-card>
+    <!-- <v-toolbar app>
       <v-menu :nudge-width="100">
         <template v-slot:activator="{ on }">
           <v-toolbar-title v-on="on">
@@ -20,7 +38,7 @@
           </router-link>
         </v-list>
       </v-menu>
-    </v-toolbar>
+    </v-toolbar> -->
 
     <v-content>
       <router-view>
@@ -67,8 +85,19 @@ export default {
         icon: "donut_large",
         title: " Chart Donut"
       }
-      ]
+      ],
+      bottomNav: 3
     };
+  },
+  computed: {
+    color () {
+      switch (this.bottomNav) {
+        case 0: return 'blue-grey'
+        case 1: return 'teal'
+        case 2: return 'brown'
+        case 3: return 'indigo'
+      }
+    }
   }
 };
 </script>
