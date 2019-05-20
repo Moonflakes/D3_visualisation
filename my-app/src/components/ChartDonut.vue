@@ -44,7 +44,8 @@
             <path
               v-for="(slice, index) in slices"
               :key="slice.id"
-              :fill="index === 0 && !displaySunburst.slices.center.visibility ? `white` : colorScale(slice.parentName)"
+              :fill="colorScale(slice.parentName)"
+              :fill-opacity="visibleArc(index, slice)"
               :id="`slice`+index"
               :d="arcSlice(slice)"
               style="cursor: pointer;"
@@ -176,6 +177,7 @@ export default {
 
     return {
       targetIndex: 0,
+      currentRing: 0,
       colorScale: color,
       pScale: pScale,
       tweenedCoord: [],
@@ -197,7 +199,7 @@ export default {
         .sort((a, b) => b.value - a.value);
 
       this.partition(root);
-      console.log("root", root.descendants().slice(2), root.descendants());
+      // console.log("root", root.descendants());
 
       function searchMaxDepth(p) {
         let maxDepth = 0;
@@ -220,28 +222,50 @@ export default {
       if (this.targetIndex) {
         let p = root.descendants()[this.targetIndex];
         let maxDepth = searchMaxDepth(p);
-        let newPartY = (this.radius - 30) / (maxDepth - p.depth + 1);
+        let radiusDivider =
+          this.displaySunburst.nbRing === "all" ? maxDepth - p.depth + 1 : 2;
+        let maxDomain =
+          this.displaySunburst.nbRing === "all"
+            ? maxDepth
+            : this.currentRing + 1;
+        let newPartY = (this.radius - 50) / radiusDivider;
         let r0Scale = scaleLinear();
         let r1Scale = scaleLinear();
-
-        r0Scale.range([30, this.radius - newPartY]).domain([p.depth, maxDepth]);
-        r1Scale.range([newPartY + 30, this.radius]).domain([p.depth, maxDepth]);
+        // console.log(maxDepth, p.depth, this.currentRing);
+        r0Scale
+          .range([50, this.radius - newPartY])
+          .domain([p.depth, maxDomain]);
+        r1Scale
+          .range([newPartY + 50, this.radius])
+          .domain([p.depth, maxDomain]);
         root.each(d => {
           let newX0 =
-              Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) *
-              2 *
-              Math.PI,
+              d.depth > this.currentRing + 1 &&
+              this.displaySunburst.nbRing !== "all"
+                ? 0
+                : Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) *
+                  2 *
+                  Math.PI,
             newX1 =
-              Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) *
-              2 *
-              Math.PI,
+              d.depth > this.currentRing + 1 &&
+              this.displaySunburst.nbRing !== "all"
+                ? 0
+                : Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) *
+                  2 *
+                  Math.PI,
             newY0 =
-              newX1 - newX0 === 2 * Math.PI && d.data.name !== p.data.name
+              d.depth > this.currentRing + 1 &&
+              this.displaySunburst.nbRing !== "all"
+                ? 0
+                : newX1 - newX0 === 2 * Math.PI && d.data.name !== p.data.name
                 ? 0
                 : r0Scale(d.depth),
             newY1 =
-              newX1 - newX0 === 2 * Math.PI && d.data.name !== p.data.name
-                ? 30
+              d.depth > this.currentRing + 1 &&
+              this.displaySunburst.nbRing !== "all"
+                ? 0
+                : newX1 - newX0 === 2 * Math.PI && d.data.name !== p.data.name
+                ? 50
                 : r1Scale(d.depth);
           return (d.target = {
             x0: newX0,
@@ -288,37 +312,60 @@ export default {
         }
       }
 
+      // console.log("je passe la")
       let amppedSlices = this.root.descendants().map(slice => {
         if (slice.parent) {
           slice.parentName = lookUpForParentName(slice);
         } else slice.parentName = "";
+        // console.log(this.currentRing);
         slice.current = {
-          x0: slice.x0,
-          x1: slice.x1,
-          y0: slice.y0,
-          y1: slice.y1
+          x0:
+            slice.depth > this.currentRing + 1 &&
+            this.displaySunburst.nbRing !== "all"
+              ? 0
+              : slice.x0,
+          x1:
+            slice.depth > this.currentRing + 1 &&
+            this.displaySunburst.nbRing !== "all"
+              ? 0
+              : slice.x1,
+          y0:
+            slice.depth > this.currentRing + 1 &&
+            this.displaySunburst.nbRing !== "all"
+              ? 0
+              : slice.y0,
+          y1:
+            slice.depth > this.currentRing + 1 &&
+            this.displaySunburst.nbRing !== "all"
+              ? 0
+              : this.displaySunburst.nbRing === "all"
+              ? slice.y1
+              : this.radius
         };
-
         return slice;
       });
       this.currentCoords = amppedSlices.map(slice => slice.current);
       if (amppedSlices[0].target) {
         this.targetCoords = amppedSlices.map(elem => elem.target);
       }
-      if (this.targetIndex === 0) {
-        this.targetCoords = this.currentCoords;
-      }
+      if (this.targetIndex === 0) this.targetCoords = this.currentCoords;
+      // nb d'anneaux au sunburst
+      if (this.displaySunburst.nbRing !== "all")
+        amppedSlices = amppedSlices.filter(
+          slice => slice.depth <= this.currentRing + 1
+        );
       return amppedSlices;
     },
     texts: function() {
       let textData = this.root.descendants().map(d => {
-        let x0 = d.target ? d.target.x0 : d.x0,
-          x1 = d.target ? d.target.x1 : d.x1,
-          y0 = d.target ? d.target.y0 : d.y0,
-          y1 = d.target ? d.target.y1 : d.y1;
+        let x0 = d.target ? d.target.x0 : d.current.x0,
+          x1 = d.target ? d.target.x1 : d.current.x1,
+          y0 = d.target ? d.target.y0 : d.current.y0,
+          y1 = d.target ? d.target.y1 : d.current.y1;
         const x = (((x0 + x1) / 2) * 180) / Math.PI;
         const y = (y0 + y1) / 2;
         let display = ((y0 + y1) / 2) * (x1 - x0) > 10 && y0 !== 0;
+        // console.log(((y0 + y1) / 2) * (x1 - x0),  y0, d)
         let transform = `rotate(${x - 90}) translate(${y},0) rotate(${
           x < 180 ? 0 : 180
         })`;
@@ -372,6 +419,7 @@ export default {
           requestAnimationFrame(animate);
         }
       }
+      // console.log(newSet)
       newSet.forEach((elem, i) => {
         new TWEEN.Tween(oldSet.length ? oldSet[i] : this.currentCoords[i])
           .to(elem, 1000)
@@ -391,6 +439,11 @@ export default {
     }
   },
   methods: {
+    visibleArc(index, slice) {
+      if (index === 0 && !this.displaySunburst.slices.center.visibility)
+        return 0;
+      return slice.children ? 0.6 : 0.4;
+    },
     reduceNbW(wordAr, sizeSeq, sizeLabel) {
       let nbWords = wordAr.map(arrayW => arrayW.length);
       let maxNbWords = Math.max(...nbWords);
@@ -428,16 +481,10 @@ export default {
       if (newSpan2 && newSpan2.length > word.length)
         return this.reduceSecondLine(word, newSpan2, newSpan);
       else if (newSpan2) newSpan.push(newSpan2);
-      console.log("array span", newSpan);
-      console.log("newSpan", newSpan1, newSpan1.length);
-      // console.log("newSpan", newSpan2, newSpan2.length);
-      console.log("tspan", tspan, tspan.length);
-      console.log("word", word, word.length);
       return newSpan;
     },
     proportionTextSeq: function() {
       let newSeqNames = this.sequences.seqNames;
-      console.log("first", this.sequences.seqNames);
       if (this.sequences.seqNames.length) {
         let array = this.sequences.seqNames.map(
           elem => elem[0].length * this.pScale(elem[0].length) + 10
@@ -463,7 +510,6 @@ export default {
             this.displaySunburst.sizes.sequenceW,
             endLabelW + endLabelP
           );
-          console.log("word", wordAr);
           newSeqNames = this.sequences.seqNames.map((elem, i) => {
             if (elem[0] !== wordAr[i]) {
               let tspan = elem[0].split(wordAr[i] + " ");
@@ -476,8 +522,6 @@ export default {
             }
             return elem;
           });
-          console.log("new", newSeqNames, wordAr);
-          newSeqNames.forEach(elem => console.log("elem", elem[0]));
           this.sequences.seqNames = newSeqNames;
         }
       }
@@ -498,7 +542,6 @@ export default {
         b = a + 10,
         c = maxL > 2 ? (maxL + 1) * 10 : 30,
         d = maxL > 2 ? 5 + maxL * 5 : 15;
-      console.log("b", b, sequence, allLength);
       return (
         "0,0 " +
         a +
@@ -530,6 +573,7 @@ export default {
     },
     clicked(index) {
       this.targetIndex = index;
+      this.currentRing = this.root.descendants()[index].depth;
       this.$emit("onClick", this.root.descendants()[index]);
     },
 
@@ -582,7 +626,7 @@ export default {
         arrayName.push(elem);
         return arrayName;
       });
-      console.log("seq", this.sequences.seqNames);
+      // console.log("seq", this.sequences.seqNames);
       let budget = this.root.descendants()[index].data.value
         ? this.root.descendants()[index].data.value / 1000000
         : this.root.descendants()[index].data.budget / 1000000;
