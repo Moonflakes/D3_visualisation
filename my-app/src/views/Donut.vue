@@ -1,7 +1,7 @@
 <template>
-    <div class="chart mt-1 text-xs-center" style="margin-left: 2px;">
+    <div class="chart text-xs-center">
       <a @click="refreshSize">Refresh Size</a>
-      <ChartDonut class="mt-13" :dataDonut="dataDonut" :width="chartWidth" :display="display"/>
+      <ChartDonut :dataDonut="dataDonut" :width="chartWidth" :display="display"/>
     </div>
 </template>
 <script>
