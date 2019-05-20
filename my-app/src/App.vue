@@ -66,11 +66,6 @@ export default {
         title: "Line Chart"
       },
       {
-        link: "/donutChart",
-        icon: "donut_large",
-        title: "Donut Chart"
-      },
-      {
         link: "/chartBars",
         icon: "bar_chart",
         title: " Chart Bar"
@@ -92,10 +87,11 @@ export default {
   computed: {
     color () {
       switch (this.bottomNav) {
-        case 0: return 'blue-grey'
+        case 0: return 'purple'
         case 1: return 'teal'
         case 2: return 'brown'
         case 3: return 'indigo'
+        case 4: return 'pink'
       }
     }
   }
